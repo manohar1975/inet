@@ -499,8 +499,9 @@ void EtherMacBase::readChannelParameters(bool errorWhenAsymmetric)
     if (connected && ((!outTrChannel) || (!inTrChannel)))
         throw cRuntimeError("Ethernet phys gate must be connected using a transmission channel");
 
-    double txRate = outTrChannel ? outTrChannel->getNominalDatarate() : 0.0;
-    double rxRate = inTrChannel ? inTrChannel->getNominalDatarate() : 0.0;
+    double txRate = networkInterface->getDatarate();
+//    double txRate = outTrChannel ? outTrChannel->getNominalDatarate() : 0.0;
+//    double rxRate = inTrChannel ? inTrChannel->getNominalDatarate() : 0.0;
 
     bool rxDisabled = !inTrChannel || inTrChannel->isDisabled();
     bool txDisabled = !outTrChannel || outTrChannel->isDisabled();
@@ -511,7 +512,7 @@ void EtherMacBase::readChannelParameters(bool errorWhenAsymmetric)
     if (txDisabled)
         connected = false;
 
-    bool dataratesDiffer;
+    bool dataratesDiffer = false;
     if (!connected) {
         curEtherDescr = &nullEtherDescr;
         dataratesDiffer = false;
@@ -519,20 +520,20 @@ void EtherMacBase::readChannelParameters(bool errorWhenAsymmetric)
             transmissionChannel = nullptr;
         if (networkInterface) {
             networkInterface->setCarrier(false);
-            networkInterface->setDatarate(0);
+//            networkInterface->setDatarate(0);
         }
     }
     else {
         if (outTrChannel && !transmissionChannel)
             outTrChannel->subscribe(POST_MODEL_CHANGE, this);
         transmissionChannel = outTrChannel;
-        dataratesDiffer = (txRate != rxRate);
+//        dataratesDiffer = (txRate != rxRate);
     }
 
     channelsDiffer = dataratesDiffer || (rxDisabled != txDisabled);
 
-    if (errorWhenAsymmetric && dataratesDiffer)
-        throw cRuntimeError("The input/output datarates differ (rx=%g bps vs tx=%g bps)", rxRate, txRate);
+//    if (errorWhenAsymmetric && dataratesDiffer)
+//        throw cRuntimeError("The input/output datarates differ (rx=%g bps vs tx=%g bps)", rxRate, txRate);
 
     if (connected) {
         // Check valid speeds
@@ -541,7 +542,7 @@ void EtherMacBase::readChannelParameters(bool errorWhenAsymmetric)
                 curEtherDescr = &(etherDescr);
                 if (networkInterface) {
                     networkInterface->setCarrier(true);
-                    networkInterface->setDatarate(txRate);
+//                    networkInterface->setDatarate(txRate);
                 }
                 return;
             }

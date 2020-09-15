@@ -19,6 +19,7 @@
 #include "inet/common/Simsignals.h"
 #include "inet/linklayer/common/EtherType_m.h"
 #include "inet/linklayer/common/InterfaceTag_m.h"
+#include "inet/linklayer/common/MacAddressTag_m.h"
 #include "inet/linklayer/ethernet/EtherEncap.h"
 #include "inet/linklayer/ethernet/EtherMacFullDuplex.h"
 #include "inet/linklayer/ethernet/EthernetControlFrame_m.h"
@@ -124,7 +125,7 @@ void EtherMacFullDuplex::startFrameTransmission()
         frame->insertAtFront(bytes);
     }
     signal->encapsulate(frame);
-    send(signal, physOutGate);
+    send(signal, SendOptions().duration(frame->getBitLength() / signal->getBitrate()), physOutGate);
 
     scheduleAt(transmissionChannel->getTransmissionFinishTime(), endTxTimer);
     changeTransmissionState(TRANSMITTING_STATE);
@@ -346,6 +347,9 @@ void EtherMacFullDuplex::processReceivedDataFrame(Packet *packet, const Ptr<cons
     emit(packetSentToUpperSignal, packet);
     // pass up to upper layer
     EV_INFO << "Sending " << packet << " to upper layer.\n";
+    auto macAddressInd = packet->addTag<MacAddressInd>();
+    macAddressInd->setSrcAddress(frame->getSrc());
+    macAddressInd->setDestAddress(frame->getDest());
     send(packet, upperLayerOutGateId);
 }
 
