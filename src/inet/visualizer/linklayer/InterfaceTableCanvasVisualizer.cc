@@ -39,8 +39,8 @@ InterfaceTableCanvasVisualizer::InterfaceCanvasVisualization::~InterfaceCanvasVi
 
 InterfaceTableCanvasVisualizer::~InterfaceTableCanvasVisualizer()
 {
-    if (displayInterfaceTables)
-        removeAllInterfaceVisualizations();
+//    if (displayInterfaceTables)
+//        removeAllInterfaceVisualizations();
 }
 
 void InterfaceTableCanvasVisualizer::initialize(int stage)

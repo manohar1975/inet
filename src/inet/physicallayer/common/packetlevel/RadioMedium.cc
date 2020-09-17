@@ -74,10 +74,10 @@ RadioMedium::RadioMedium() :
 RadioMedium::~RadioMedium()
 {
     cancelAndDelete(removeNonInterferingTransmissionsTimer);
-    communicationCache->mapTransmissions([&] (const ITransmission *transmission) {
-        delete communicationCache->getCachedSignal(transmission);
-        delete transmission;
-    });
+//    communicationCache->mapTransmissions([&] (const ITransmission *transmission) {
+//        delete communicationCache->getCachedSignal(transmission); //KLUDGE
+//        delete transmission;
+//    });
     if (recordCommunicationLog)
         communicationLog.close();
 }
