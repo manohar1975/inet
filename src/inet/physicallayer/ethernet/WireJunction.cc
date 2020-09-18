@@ -16,11 +16,12 @@
  */
 
 #include "inet/common/Simsignals.h"
-#include "inet/linklayer/ethernet/EtherHub.h"
+#include "inet/physicallayer/ethernet/WireJunction.h"
 
 namespace inet {
+namespace physicallayer {
 
-Define_Module(EtherHub);
+Define_Module(WireJunction);
 
 inline std::ostream& operator<<(std::ostream& os, cMessage *msg)
 {
@@ -28,7 +29,7 @@ inline std::ostream& operator<<(std::ostream& os, cMessage *msg)
     return os;
 }
 
-void EtherHub::initialize()
+void WireJunction::initialize()
 {
     numPorts = gateSize("ethg");
     inputGateBaseId = gateBaseId("ethg$i");
@@ -45,7 +46,7 @@ void EtherHub::initialize()
     checkConnections(true);
 }
 
-void EtherHub::checkConnections(bool errorWhenAsymmetric)
+void WireJunction::checkConnections(bool errorWhenAsymmetric)
 {
     int numActivePorts = 0;
     double datarate = 0.0;
@@ -93,7 +94,7 @@ void EtherHub::checkConnections(bool errorWhenAsymmetric)
     }
 }
 
-void EtherHub::receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj, cObject *details)
+void WireJunction::receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj, cObject *details)
 {
     Enter_Method_Silent();
 
@@ -137,7 +138,7 @@ void EtherHub::receiveSignal(cComponent *source, simsignal_t signalID, cObject *
     }
 }
 
-void EtherHub::handleMessage(cMessage *msg)
+void WireJunction::handleMessage(cMessage *msg)
 {
     if (dataratesDiffer)
         checkConnections(true);
@@ -178,7 +179,7 @@ void EtherHub::handleMessage(cMessage *msg)
     delete msg;
 }
 
-void EtherHub::finish()
+void WireJunction::finish()
 {
     simtime_t t = simTime();
     recordScalar("simulated time", t);
@@ -187,5 +188,6 @@ void EtherHub::finish()
         recordScalar("messages/sec", numMessages / t);
 }
 
+} // namespace physicallayer
 } // namespace inet
 
