@@ -547,7 +547,7 @@ void EtherMac::startFrameTransmission()
     }
     signal->encapsulate(frame);
     signal->addByteLength(extensionLength.get());
-    send(signal, physOutGate);
+    sendSignal(signal);
 
     // check for collisions (there might be an ongoing reception which we don't know about, see below)
     if (!duplexMode && receiveState != RX_IDLE_STATE) {
@@ -699,19 +699,33 @@ void EtherMac::handleEndBackoffPeriod()
     }
 }
 
+void EtherMac::sendSignal(EthernetSignalBase *signal)
+{
+    ASSERT(curTxSignal == nullptr);
+    curTxSignal = signal->dup();
+    curTxSignal->setOrigPacketId(signal->getId());
+    send(signal, physOutGate);
+}
+
 void EtherMac::sendJamSignal()
 {
     if (currentSendPkTreeID == 0)
         throw cRuntimeError("Model error: sending JAM while not transmitting");
 
+    // abort current transmission
+    ASSERT(curTxSignal != nullptr);
+    simtime_t duration = simTime() - curTxSignal->getCreationTime();    //TODO save and use start tx time
+    cutEthernetSignalEnd(curTxSignal, duration);    //TODO save and use start tx time
+    send(curTxSignal, SendOptions().finishTx(curTxSignal->getOrigPacketId()).duration(duration), physOutGate);
+    curTxSignal = nullptr;
+
+    // send JAM
     EthernetJamSignal *jam = new EthernetJamSignal("JAM_SIGNAL");
     jam->setByteLength(B(JAM_SIGNAL_BYTES).get());
     jam->setBitrate(curEtherDescr->txrate);
     jam->setAbortedPkTreeID(currentSendPkTreeID);
-
-    transmissionChannel->forceTransmissionFinishTime(SIMTIME_ZERO);
     //emit(packetSentToLowerSignal, jam);
-    send(jam, physOutGate);
+    sendSignal(jam);
 
     scheduleAt(transmissionChannel->getTransmissionFinishTime(), endJammingTimer);
     changeTransmissionState(JAMMING_STATE);
@@ -931,7 +945,7 @@ void EtherMac::fillIFGIfInBurst()
         gap->setBitrate(curEtherDescr->txrate);
         bytesSentInBurst += B(gap->getByteLength());
         currentSendPkTreeID = gap->getTreeId();
-        send(gap, physOutGate);
+        sendSignal(gap);
         changeTransmissionState(SEND_IFG_STATE);
         rescheduleAt(transmissionChannel->getTransmissionFinishTime(), endIfgTimer);
     }
