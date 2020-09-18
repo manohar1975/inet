@@ -188,17 +188,21 @@ void EtherMac::handleMessageWhenUp(cMessage *msg)
         handleSelfMessage(msg);
     else if (msg->getArrivalGateId() == upperLayerInGateId)
         handleUpperPacket(check_and_cast<Packet *>(msg));
-    else if (msg->getArrivalGate() == physInGate) {
-        if (auto jamSignal = dynamic_cast<EthernetJamSignal *>(msg))
-            processJamSignalFromNetwork(jamSignal);
-        else
-            processMsgFromNetwork(check_and_cast<EthernetSignalBase *>(msg));
-    }
+    else if (msg->getArrivalGate() == physInGate)
+        handleSignalFromNetwork(check_and_cast<EthernetSignalBase *>(msg));
     else
         throw cRuntimeError("Message received from unknown gate");
 
     processAtHandleMessageFinished();
     printState();
+}
+
+void EtherMac::handleSignalFromNetwork(EthernetSignalBase *signal)
+{
+    if (auto jamSignal = dynamic_cast<EthernetJamSignal *>(signal))
+        processJamSignalFromNetwork(jamSignal);
+    else
+        processMsgFromNetwork(signal);
 }
 
 void EtherMac::handleUpperPacket(Packet *packet)

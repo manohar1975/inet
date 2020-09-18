@@ -117,6 +117,7 @@ class INET_API EtherMac : public EtherMacBase
     virtual void addReceptionInReconnectState(long id, simtime_t endRxTime);
     virtual void processDetectedCollision();
     virtual void sendSignal(EthernetSignalBase *signal);
+    virtual void handleSignalFromNetwork(EthernetSignalBase *signal);
 
     B calculateMinFrameLength();
     B calculatePaddedFrameLength(Packet *frame);
