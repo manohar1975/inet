@@ -45,3 +45,9 @@ simple EtherHub
         inout ethg[] @labels(EtherFrame-conn);  // to stations; each one represents a port
 }
 
+simple WireJunction extends EtherHub
+{
+    parameters:
+        @display("i=misc/node_vs");
+}
+
