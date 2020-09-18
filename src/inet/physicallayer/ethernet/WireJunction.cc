@@ -167,7 +167,7 @@ void WireJunction::handleMessage(cMessage *msg)
             cMessage *msg2 = isLast ? msg : msg->dup();
 
             // stop current transmission
-            ogate->getTransmissionChannel()->forceTransmissionFinishTime(SIMTIME_ZERO);
+            // ogate->getTransmissionChannel()->forceTransmissionFinishTime(SIMTIME_ZERO);  //FIXME KLUDGE
 
             // send
             send(msg2, ogate);
