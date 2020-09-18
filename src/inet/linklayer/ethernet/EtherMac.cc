@@ -594,6 +594,7 @@ void EtherMac::handleEndTxPeriod()
     if (transmitState != TRANSMITTING_STATE || (!duplexMode && receiveState != RX_IDLE_STATE))
         throw cRuntimeError("End of transmission, and incorrect state detected");
 
+    txFinished();
     currentSendPkTreeID = 0;
 
     if (currentTxFrame == nullptr)
@@ -735,11 +736,19 @@ void EtherMac::sendJamSignal()
     changeTransmissionState(JAMMING_STATE);
 }
 
+void EtherMac::txFinished()
+{
+    ASSERT(curTxSignal != nullptr);
+    delete curTxSignal;
+    curTxSignal = nullptr;
+}
+
 void EtherMac::handleEndJammingPeriod()
 {
     if (transmitState != JAMMING_STATE)
         throw cRuntimeError("At end of JAMMING but not in JAMMING_STATE");
 
+    txFinished();
     EV_DETAIL << "Jamming finished, executing backoff\n";
     handleRetransmission();
 }

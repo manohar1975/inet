@@ -118,6 +118,7 @@ class INET_API EtherMac : public EtherMacBase
     virtual void processDetectedCollision();
     virtual void sendSignal(EthernetSignalBase *signal);
     virtual void handleSignalFromNetwork(EthernetSignalBase *signal);
+    virtual void txFinished();
 
     B calculateMinFrameLength();
     B calculatePaddedFrameLength(Packet *frame);
