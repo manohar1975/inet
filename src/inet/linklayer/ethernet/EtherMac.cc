@@ -201,6 +201,14 @@ void EtherMac::handleMessageWhenUp(cMessage *msg)
 
 void EtherMac::handleSignalStartFromNetwork(EthernetSignalBase *signal)
 {
+    if (!duplexMode && transmitState == WAIT_IFG_STATE && endIfgTimer->isScheduled() && endIfgTimer->getSendingTime() == simTime() && signal->getRemainingDuration() > SIMTIME_ZERO) {
+        // IFG started now, but continuous signal arrived (end of previous recepted signal and start of current signal are same time)
+        // Aborting WAIT_IFG
+        cancelEvent(endIfgTimer);
+        EV_DETAIL << "Aborted IFG period (elapsed IFG is ZERO)\n";
+        changeTransmissionState(TX_IDLE_STATE);
+    }
+
     if (auto jamSignal = dynamic_cast<EthernetJamSignal *>(signal))
         processJamSignalFromNetwork(jamSignal);
     else
