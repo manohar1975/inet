@@ -30,6 +30,16 @@ namespace physicallayer {
 class INET_API WireJunction : public cSimpleModule, protected cListener
 {
   protected:
+    class SignalKey {
+      public:
+        long incomingOrigId = -1;
+        long outgoingPort = -1;
+        SignalKey(long incomingOrigId, long outgoingPort) : incomingOrigId(incomingOrigId), outgoingPort(outgoingPort) {}
+        bool operator<(const SignalKey& o) const { return incomingOrigId < o.incomingOrigId || (incomingOrigId == o.incomingOrigId && outgoingPort < o.outgoingPort); }
+    };
+
+  protected:
+    std::map<SignalKey, long> signalIdMap;
     int numPorts;    // sizeof(ethg)
     int inputGateBaseId;    // gate id of ethg$i[0]
     int outputGateBaseId;    // gate id of ethg$o[0]
@@ -45,6 +55,9 @@ class INET_API WireJunction : public cSimpleModule, protected cListener
     virtual void receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj, cObject *details) override;
 
     virtual void checkConnections(bool errorWhenAsymmetric);
+    virtual void registerSignalId(long incomingSignalId, int port, long outgoingSignalId);
+    virtual void deregisterSignalId(long incomingSignalId);
+    virtual long getOutSignalIdFor(long incomingSignalId, int port);
 };
 
 } //namespace physicallayer

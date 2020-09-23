@@ -43,6 +43,7 @@ void WireJunction::initialize()
         gate(inputGateBaseId + i)->setDeliverImmediately(true);
     subscribe(POST_MODEL_CHANGE, this);    // we'll need to do the same for dynamically added gates as well
 
+    setTxUpdateSupport(true);
     checkConnections(true);
 }
 
@@ -143,40 +144,60 @@ void WireJunction::handleMessage(cMessage *msg)
     if (dataratesDiffer)
         checkConnections(true);
 
-    ASSERT(msg->isPacket());
+    cPacket *signal = check_and_cast<cPacket *>(msg);
 
     // Handle frame sent down from the network entity: send out on every other port
-    int arrivalPort = msg->getArrivalGate()->getIndex();
-    EV << "Frame " << msg << " arrived on port " << arrivalPort << ", broadcasting on all other ports\n";
+    int arrivalPort = signal->getArrivalGate()->getIndex();
+    EV << "Frame " << signal << " arrived on port " << arrivalPort << ", broadcasting on all other ports\n";
 
     numMessages++;
-    emit(packetReceivedSignal, msg);
+    emit(packetReceivedSignal, signal);
 
     if (numPorts <= 1) {
-        delete msg;
+        delete signal;
         return;
     }
 
+    long origPacketId = signal->getOrigPacketId();
     for (int i = 0; i < numPorts; i++) {
         if (i != arrivalPort) {
             cGate *ogate = gate(outputGateBaseId + i);
             if (!ogate->isConnected())
                 continue;
 
-            bool isLast = (arrivalPort == numPorts - 1) ? (i == numPorts - 2) : (i == numPorts - 1);
-            cMessage *msg2 = isLast ? msg : msg->dup();
+            cPacket *outSignal = signal->dup();
+            SendOptions sendOptions;
+            sendOptions.duration(signal->getDuration());
 
-            // stop current transmission
-            // ogate->getTransmissionChannel()->forceTransmissionFinishTime(SIMTIME_ZERO);  //FIXME KLUDGE
+            if (origPacketId == -1) {
+                registerSignalId(signal->getId(), i, outSignal->getId());
+            }
+            else {
+                long outOrigId = getOutSignalIdFor(origPacketId, i);
+                sendOptions.updateTx(outOrigId, signal->getRemainingDuration());
+            }
 
             // send
-            send(msg2, ogate);
-
-            if (isLast)
-                msg = nullptr; // msg sent, do not delete it.
+            send(outSignal, sendOptions, ogate);
         }
     }
-    delete msg;
+    delete signal;
+}
+
+void WireJunction::registerSignalId(long incomingSignalId, int port, long outgoingSignalId)
+{
+    signalIdMap.insert(std::pair<SignalKey, long>(SignalKey(incomingSignalId, port), outgoingSignalId));
+}
+
+void WireJunction::deregisterSignalId(long incomingSignalId)
+{
+    for (int i=0; i < numPorts; i++)
+        signalIdMap.erase(SignalKey(incomingSignalId, i));
+}
+
+long WireJunction::getOutSignalIdFor(long incomingSignalId, int port)
+{
+    return signalIdMap.at(SignalKey(incomingSignalId, port));
 }
 
 void WireJunction::finish()
