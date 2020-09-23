@@ -68,6 +68,7 @@ void Ppp::initialize(int stage)
         WATCH(numDroppedBitErr);
         WATCH(numDroppedIfaceDown);
 
+        subscribe(PRE_MODEL_CHANGE, this);
         subscribe(POST_MODEL_CHANGE, this);
         emit(transmissionStateChangedSignal, 0L);
 
@@ -100,21 +101,26 @@ void Ppp::receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj, 
 {
     MacProtocolBase::receiveSignal(source, signalID, obj, details);
 
-    if (signalID != POST_MODEL_CHANGE)
-        return;
-
-    if (auto gcobj = dynamic_cast<cPostPathCreateNotification *>(obj)) {
-        if (physOutGate == gcobj->pathStartGate)
-            refreshOutGateConnection(true);
+    if (signalID == POST_MODEL_CHANGE) {
+        if (auto gcobj = dynamic_cast<cPostPathCreateNotification *>(obj)) {
+            if (physOutGate == gcobj->pathStartGate)
+                refreshOutGateConnection(true);
+        }
+        else if (auto gcobj = dynamic_cast<cPostPathCutNotification *>(obj)) {
+            if (physOutGate == gcobj->pathStartGate)
+                refreshOutGateConnection(false);
+        }
+        else if (datarateChannel && dynamic_cast<cPostParameterChangeNotification *>(obj)) {
+            cPostParameterChangeNotification *gcobj = static_cast<cPostParameterChangeNotification *>(obj);
+            if (datarateChannel == gcobj->par->getOwner() && !strcmp("datarate", gcobj->par->getName()))
+                refreshOutGateConnection(true);
+        }
     }
-    else if (auto gcobj = dynamic_cast<cPostPathCutNotification *>(obj)) {
-        if (physOutGate == gcobj->pathStartGate)
-            refreshOutGateConnection(false);
-    }
-    else if (datarateChannel && dynamic_cast<cPostParameterChangeNotification *>(obj)) {
-        cPostParameterChangeNotification *gcobj = static_cast<cPostParameterChangeNotification *>(obj);
-        if (datarateChannel == gcobj->par->getOwner() && !strcmp("datarate", gcobj->par->getName()))
-            refreshOutGateConnection(true);
+    else if (signalID == PRE_MODEL_CHANGE) {
+        if (auto gcobj = dynamic_cast<cPrePathCutNotification *>(obj)) {
+            if (physOutGate == gcobj->pathStartGate)
+                refreshOutGateConnection(false);
+        }
     }
 }
 
