@@ -190,7 +190,12 @@ void EtherMac::handleMessageWhenUp(cMessage *msg)
         handleUpperPacket(check_and_cast<Packet *>(msg));
     else if (msg->getArrivalGate() == physInGate) {
         auto signal = check_and_cast<EthernetSignalBase *>(msg);
+        if (signal->getOrigPacketId() == -1 && signal->isReceptionStart())
             handleSignalStartFromNetwork(signal);
+        else if (signal->isReceptionEnd())
+            handleSignalEndFromNetwork(signal);
+        else
+            throw cRuntimeError("The signal-start and signal-end reception supported only");
     }
     else
         throw cRuntimeError("Message received from unknown gate");
@@ -209,10 +214,36 @@ void EtherMac::handleSignalStartFromNetwork(EthernetSignalBase *signal)
         changeTransmissionState(TX_IDLE_STATE);
     }
 
+    if (signal->getRemainingDuration() == SIMTIME_ZERO) {
+        //
+    }
     if (auto jamSignal = dynamic_cast<EthernetJamSignal *>(signal))
         processJamSignalFromNetwork(jamSignal);
     else
         processMsgFromNetwork(signal);
+}
+
+void EtherMac::handleSignalEndFromNetwork(EthernetSignalBase *signal)
+{
+    simtime_t endRxTime = simTime() + signal->getRemainingDuration();
+    if (auto jamSignal = dynamic_cast<EthernetJamSignal *>(signal)) {
+        EV_DETAIL << "JAM signal end received. " << signal << endl;
+        //TODO other administration? some checks?
+        rescheduleAt(endRxTime, endRxTimer);
+    }
+    else {
+        EV_DETAIL << "Signal end received. " << signal << endl;
+        //TODO other administration? some checks?
+        //TODO manage parallel incoming signals
+        ASSERT(frameBeingReceived);
+        auto oldId = frameBeingReceived->getId();
+        if (oldId == -1)
+            oldId = frameBeingReceived->getOrigPacketId();
+        ASSERT(oldId == signal->getOrigPacketId());
+        delete frameBeingReceived;
+        frameBeingReceived = signal;
+        rescheduleAt(endRxTime, endRxTimer);
+    }
 }
 
 void EtherMac::handleUpperPacket(Packet *packet)
