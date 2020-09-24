@@ -70,6 +70,8 @@ void EtherMac::initialize(int stage)
         numConcurrentTransmissions = 0;
         currentSendPkTreeID = 0;
 
+        setTxUpdateSupport(true);
+
         WATCH(backoffs);
         WATCH(numConcurrentTransmissions);
     }
