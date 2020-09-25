@@ -33,7 +33,9 @@ class INET_API PacketEmitter : public PacketFlowBase
     simsignal_t signal;
     PacketFilter packetFilter;
     Direction direction = DIRECTION_UNDEFINED;
-    const Protocol *protocol = nullptr;
+//    const Protocol *protocol = nullptr;
+
+    Packet *processedPacket = nullptr;
 
   protected:
     virtual void initialize(int stage) override;

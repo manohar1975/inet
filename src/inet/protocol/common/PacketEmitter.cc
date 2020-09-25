@@ -38,14 +38,15 @@ void PacketEmitter::initialize(int stage)
             direction = DIRECTION_UNDEFINED;
         else
             throw cRuntimeError("Unknown direction parameter value");
-        const char *protocolName = par("protocolName");
-        protocol = Protocol::getProtocol(protocolName);
+//        const char *protocolName = par("protocolName");
+//        protocol = Protocol::getProtocol(protocolName);
     }
 }
 
 void PacketEmitter::processPacket(Packet *packet)
 {
-    // void
+    delete processedPacket;
+    processedPacket = packet->dup();
 }
 
 void PacketEmitter::pushPacket(Packet *packet, cGate *gate)
@@ -56,14 +57,16 @@ void PacketEmitter::pushPacket(Packet *packet, cGate *gate)
 
 void PacketEmitter::handlePushPacketProcessed(Packet *packet, cGate *gate, bool successful)
 {
-    emitPacket(packet);
+    emitPacket(processedPacket);
     PacketFlowBase::handlePushPacketProcessed(packet, gate, successful);
 }
 
 void PacketEmitter::emitPacket(Packet *packet)
 {
+    std::cout << "FUCK" << getFullPath() << std::endl;
     if (packetFilter.matches(packet)) {
         auto clone = new Packet(packet->getName(), packet->peekAll());
+        auto protocol = packet->getTag<PacketProtocolTag>()->getProtocol();
         clone->copyTags(*packet);
         clone->addTagIfAbsent<DirectionTag>()->setDirection(direction);
         clone->addTagIfAbsent<PacketProtocolTag>()->setProtocol(protocol);
