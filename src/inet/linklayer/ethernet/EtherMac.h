@@ -49,6 +49,16 @@ class INET_API EtherMac : public EtherMacBase
     virtual void finish() override;
 
   protected:
+    class RxSignal {
+      public:
+        long signalId = -1;
+        EthernetSignalBase *signal = nullptr;
+        simtime_t endRxTime;
+        RxSignal(long signalId, EthernetSignalBase *signal, simtime_t_cref endRxTime) : signalId(signalId), signal(signal), endRxTime(endRxTime) {}
+    };
+    std::vector<RxSignal> rxSignals;
+
+  protected:
     // states
     int numConcurrentTransmissions = 0;    // number of colliding frames -- we must receive this many jams (caches endRxTimeList.size())
     int backoffs = 0;    // value of backoff for exponential back-off algorithm
@@ -120,6 +130,7 @@ class INET_API EtherMac : public EtherMacBase
     virtual void handleSignalStartFromNetwork(EthernetSignalBase *signal);
     virtual void handleSignalEndFromNetwork(EthernetSignalBase *signal);
     virtual void txFinished();
+    virtual void updateRxSignals(EthernetSignalBase *signal, simtime_t endRxTime);
 
     B calculateMinFrameLength();
     B calculatePaddedFrameLength(Packet *frame);

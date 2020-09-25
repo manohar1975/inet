@@ -1045,5 +1045,33 @@ void EtherMac::beginSendFrames()
     }
 }
 
+void EtherMac::updateRxSignals(EthernetSignalBase *signal, simtime_t endRxTime)
+{
+    simtime_t maxEndRxTime = endRxTime;
+    bool found = false;
+    bool isUpdate = signal->isUpdate();
+    long signalId = isUpdate ? signal->getOrigPacketId() : signal->getId();
+
+    for (auto& rx: rxSignals) {
+        if (isUpdate && rx.signalId == signalId) {
+            ASSERT(!found);
+            found = true;
+            delete rx.signal;
+            rx.signal = signal;
+            rx.endRxTime = endRxTime;
+        }
+
+        if (rx.endRxTime > maxEndRxTime)
+            maxEndRxTime = rx.endRxTime;
+    }
+
+    if (!found)
+        rxSignals.push_back(RxSignal(signalId, signal, endRxTime));
+
+    if (endRxTimer->getArrivalTime() != maxEndRxTime) {
+        rescheduleAt(maxEndRxTime, endRxTimer);
+    }
+}
+
 } // namespace inet
 
