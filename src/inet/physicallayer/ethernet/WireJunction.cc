@@ -80,7 +80,9 @@ void WireJunction::checkConnections(bool errorWhenAsymmetric)
             EV << "The input datarate at port " << i << " differs from datarates of previous ports.\n";
         }
 
-        cChannel *outTrChannel = ogate->getTransmissionChannel();
+        cDatarateChannel *outTrChannel = check_and_cast<cDatarateChannel *>(ogate->getTransmissionChannel());
+        if (outTrChannel->getMode() != cDatarateChannel::UNCHECKED)
+            outTrChannel->setMode(cDatarateChannel::UNCHECKED);
         drate = outTrChannel->getNominalDatarate();
 
         if (datarate != drate) {
