@@ -112,7 +112,6 @@ class INET_API EtherMac : public EtherMacBase
     virtual void processMsgFromNetwork(EthernetSignalBase *msg);
     virtual void scheduleEndIFGPeriod();
     virtual void fillIFGIfInBurst();
-    virtual void scheduleEndTxPeriod(B sentFrameByteLength);
     virtual void scheduleEndRxPeriod(EthernetSignalBase *);
     virtual void scheduleEndPausePeriod(int pauseUnits);
     virtual void beginSendFrames();
