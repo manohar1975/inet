@@ -932,5 +932,14 @@ void EtherMac::updateRxSignals(EthernetSignalBase *signal, simtime_t endRxTime)
     }
 }
 
+void EtherMac::dropCurrentTxFrame(PacketDropDetails& details)
+{
+    EtherMacBase::dropCurrentTxFrame(details);
+    delete curTxSignal;
+    curTxSignal = nullptr;
+}
+
+
+
 } // namespace inet
 

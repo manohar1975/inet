@@ -118,6 +118,7 @@ class INET_API EtherMac : public EtherMacBase
     virtual void handleSignalFromNetwork(EthernetSignalBase *signal);
     virtual void txFinished();
     virtual void updateRxSignals(EthernetSignalBase *signal, simtime_t endRxTime);
+    virtual void dropCurrentTxFrame(PacketDropDetails& details) override;
 
     B calculateMinFrameLength();
     B calculatePaddedFrameLength(Packet *frame);
