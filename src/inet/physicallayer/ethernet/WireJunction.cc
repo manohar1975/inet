@@ -81,8 +81,8 @@ void WireJunction::checkConnections(bool errorWhenAsymmetric)
         }
 
         cDatarateChannel *outTrChannel = check_and_cast<cDatarateChannel *>(ogate->getTransmissionChannel());
-        if (outTrChannel->getMode() != cDatarateChannel::UNCHECKED)
-            outTrChannel->setMode(cDatarateChannel::UNCHECKED);
+        if (outTrChannel->getMode() != cDatarateChannel::MULTI)
+            outTrChannel->setMode(cDatarateChannel::MULTI);
         drate = outTrChannel->getNominalDatarate();
 
         if (datarate != drate) {
