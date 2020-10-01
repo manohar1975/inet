@@ -90,24 +90,29 @@ bool FingerprintCalculator::addEventIngredient(cEvent *event, cSingleFingerprint
 
 void FingerprintCalculator::addEvent(cEvent *event)
 {
-    if (networkCommunicationFilter) {
-        if (event->isMessage() && static_cast<cMessage *>(event)->isPacket()) {
-            auto cpacket = static_cast<cPacket *>(event);
+    if (networkCommunicationFilter || packetUpdateFilter) {
+        cPacket *cpacket =
+                (event->isMessage() && static_cast<cMessage *>(event)->isPacket()) ?
+                static_cast<cPacket *>(event) : nullptr;
+
+        if (packetUpdateFilter) {
+            if (cpacket != nullptr && cpacket->isUpdate())
+                return;
+        }
+
+        if (networkCommunicationFilter) {
+            if (cpacket == nullptr)
+                return;
+
             auto packet = dynamic_cast<Packet *>(cpacket);
             if (packet == nullptr)
                 packet = dynamic_cast<Packet *>(cpacket->getEncapsulatedPacket());
-            if (packet != nullptr) {
-                auto senderNode = findContainingNode(cpacket->getSenderModule());
-                auto arrivalNode = findContainingNode(cpacket->getArrivalModule());
-                if (senderNode == arrivalNode)
-                    return;
-            }
-        }
-    }
-    if (packetUpdateFilter) {
-        if (event->isMessage() && static_cast<cMessage *>(event)->isPacket()) {
-            auto cpacket = static_cast<cPacket *>(event);
-            if (cpacket->isUpdate())
+            if (packet == nullptr)
+                return;
+
+            auto senderNode = findContainingNode(cpacket->getSenderModule());
+            auto arrivalNode = findContainingNode(cpacket->getArrivalModule());
+            if (senderNode == arrivalNode)
                 return;
         }
     }
