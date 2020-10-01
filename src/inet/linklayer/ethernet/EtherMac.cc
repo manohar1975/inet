@@ -323,8 +323,6 @@ void EtherMac::handleUpperPacket(Packet *packet)
 
 void EtherMac::processMsgFromNetwork(EthernetSignalBase *signal)
 {
-    EV_DETAIL << "Received " << signal << " from network.\n";
-
     if (signal->getBitrate() != curEtherDescr->txrate)
         throw cRuntimeError("Ethernet misconfiguration: bitrate in module and on the signal must be same.");
 
