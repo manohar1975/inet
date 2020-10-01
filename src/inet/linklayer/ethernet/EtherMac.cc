@@ -63,11 +63,11 @@ void EtherMac::initialize(int stage)
 
     if (stage == INITSTAGE_LOCAL) {
         endRxTimer = new cMessage("EndReception", ENDRECEPTION);
-        endRxTimer->setSchedulingPriority(999);
+//        endRxTimer->setSchedulingPriority(999);
         endBackoffTimer = new cMessage("EndBackoff", ENDBACKOFF);
-        endBackoffTimer->setSchedulingPriority(-999);
+//        endBackoffTimer->setSchedulingPriority(-999);
         endJammingTimer = new cMessage("EndJamming", ENDJAMMING);
-        endJammingTimer->setSchedulingPriority(999);
+//        endJammingTimer->setSchedulingPriority(999);
 
         // initialize state info
         backoffs = 0;
